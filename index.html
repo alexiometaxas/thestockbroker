@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Stock Broker</title>
+  <!-- Using Noto Sans from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
+  <style>
+    /* Global Reset & Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      font-family: 'Noto Sans', sans-serif;
+      /* Background using the provided image */
+      background: url('https://i.ibb.co/xw6h6pN/Ejbtkz.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    /* Top Bar */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+    }
+    .topbar .left {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .topbar .right {
+      font-size: 1.2rem;
+      font-weight: 400;
+    }
+    /* Content Container – vertically centered (taking topbar height into account) */
+    .content-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: calc(100vh - 60px);
+      text-align: center;
+      padding: 20px;
+    }
+    /* Intro Section */
+    .intro {
+      transition: opacity 1s ease;
+      opacity: 1;
+    }
+    .intro.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .intro h2 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+    .intro p {
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+    }
+    .intro button {
+      padding: 15px 40px;
+      font-size: 1.6rem;
+      border: 2px solid #e0e0e0;
+      background: transparent;
+      color: #e0e0e0;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .intro button:hover {
+      background: rgba(224,224,224,0.2);
+      transform: scale(1.05);
+    }
+    /* Form Container */
+    .form-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      min-height: 250px;
+      margin-top: 20px;
+    }
+    /* All question steps share the same centered location */
+    .question-step {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      /* The default centered position is achieved with translate(-50%, -50%) */
+      transform: translate(-50%, -50%);
+      width: 100%;
+      opacity: 0;
+      /* We'll trigger animations via additional classes instead of simple transitions */
+    }
+    .question-step.active {
+      opacity: 1;
+    }
+    /* Animation Classes */
+    .question-step.slide-out {
+      animation: slideOutRight 0.8s forwards;
+    }
+    .question-step.slide-in {
+      animation: slideInLeft 0.8s forwards;
+    }
+    @keyframes slideOutRight {
+      0% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(150%, -50%);
+      }
+    }
+    @keyframes slideInLeft {
+      0% {
+        opacity: 0;
+        transform: translate(-150%, -50%);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+    /* Question Box – only outlined, no background */
+    .question-box {
+      border: 2px solid #e0e0e0;
+      padding: 20px;
+      border-radius: 8px;
+      background: transparent;
+    }
+    .question-title {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .option {
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .option:hover {
+      background: rgba(224,224,224,0.1);
+      transform: scale(1.02);
+    }
+    /* Modal (Popup) */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1s ease;
+      z-index: 200;
+    }
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-content {
+      border: 2px solid #e0e0e0;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      background: transparent;
+    }
+    .modal-content img {
+      width: 100%;
+      max-width: 500px;
+      border-radius: 8px;
+    }
+    .modal-content p {
+      margin-top: 15px;
+      font-size: 1.8rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="left">The Stock Broker™</div>
+    <div class="right">Portfolio Growth Strategists</div>
+  </div>
+  <!-- Main Content -->
+  <div class="content-container">
+    <!-- Intro Section -->
+    <div class="intro" id="intro">
+      <h2>Welcome to The Stock Broker™</h2>
+      <p>Discover if you're a good fit for our expert investment management services.</p>
+      <button id="getStartedBtn">Get Started</button>
+    </div>
+    <!-- Form Container -->
+    <div class="form-container" id="formContainer" style="display: none;">
+      <!-- Step 1: Budget -->
+      <div class="question-step active" data-step="1">
+        <div class="question-box">
+          <div class="question-title">My budget is...</div>
+          <div class="options">
+            <div class="option" data-value="Under $1,000">Under $1,000</div>
+            <div class="option" data-value="$1,000 - $10,000">$1,000 - $10,000</div>
+            <div class="option" data-value="$10,000 - $50,000">$10,000 - $50,000</div>
+            <div class="option" data-value="Over $50,000">Over $50,000</div>
+          </div>
+        </div>
+      </div>
+      <!-- Step 2: Experience -->
+      <div class="question-step" data-step="2">
+        <div class="question-box">
+          <div class="question-title">My investing experience is...</div>
+          <div class="options">
+            <div class="option" data-value="Beginner">Beginner</div>
+            <div class="option" data-value="Intermediate">Intermediate</div>
+            <div class="option" data-value="Expert">Expert</div>
+          </div>
+        </div>
+      </div>
+      <!-- Step 3: Goal -->
+      <div class="question-step" data-step="3">
+        <div class="question-box">
+          <div class="question-title">My primary goal is...</div>
+          <div class="options">
+            <div class="option" data-value="Growth">Growth</div>
+            <div class="option" data-value="Income">Income</div>
+            <div class="option" data-value="Retirement">Retirement</div>
+            <div class="option" data-value="Speculation">Speculation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal -->
+  <div class="modal" id="trollModal">
+    <div class="modal-content">
+      <img src="https://i.ibb.co/svMFtjmP/d2-VQh-E-copy.png" alt="Troll Image">
+      <p>Are you really surprised?</p>
+    </div>
+  </div>
+  <script>
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const intro = document.getElementById('intro');
+    const formContainer = document.getElementById('formContainer');
+    const steps = document.querySelectorAll('.question-step');
+    const modal = document.getElementById('trollModal');
+    let currentStep = 0;
+    
+    // Function to show a given step (without animation classes)
+    function showStep(index) {
+      steps.forEach((step, idx) => {
+        if (idx === index) {
+          step.classList.add('active');
+        } else {
+          step.classList.remove('active');
+        }
+      });
+    }
+    
+    // When "Get Started" is clicked: fade out intro then show form container
+    getStartedBtn.addEventListener('click', () => {
+      intro.classList.add('hidden');
+      setTimeout(() => {
+        intro.style.display = 'none';
+        formContainer.style.display = 'block';
+        showStep(0);
+      }, 1000);
+    });
+    
+    // When an option is clicked, animate out current step and animate in next step
+    document.querySelectorAll('.option').forEach(option => {
+      option.addEventListener('click', () => {
+        const currentElem = steps[currentStep];
+        // Add slide-out class to current step to animate out (to the right)
+        currentElem.classList.add('slide-out');
+        setTimeout(() => {
+          currentElem.classList.remove('slide-out', 'active');
+          if (currentStep < steps.length - 1) {
+            currentStep++;
+            const nextElem = steps[currentStep];
+            nextElem.classList.add('slide-in', 'active');
+            setTimeout(() => {
+              nextElem.classList.remove('slide-in');
+            }, 800);
+          } else {
+            // Final step reached: show modal after a short delay
+            setTimeout(() => {
+              modal.classList.add('active');
+            }, 300);
+          }
+        }, 800);
+      });
+    });
+    
+    // Clicking outside modal content resets the experience
+    modal.addEventListener('click', e => {
+      if (e.target === modal) {
+        modal.classList.remove('active');
+        resetForm();
+      }
+    });
+    
+    function resetForm() {
+      currentStep = 0;
+      formContainer.style.display = 'none';
+      intro.style.display = 'block';
+      intro.classList.remove('hidden');
+      showStep(currentStep);
+    }
+  </script>
+</body>
+</html>
